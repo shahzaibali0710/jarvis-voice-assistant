@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="color-scheme" content="dark" />
+<!-- Keep this title: hotkey.py finds the window to raise by matching it. -->
+<title>J.A.R.V.I.S.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap"
+  rel="stylesheet"
+/>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body data-state="idle">
+  <div class="bg-layer" aria-hidden="true"></div>
+
+  <div class="app">
+    <!-- ───────── Top bar ───────── -->
+    <header class="topbar">
+      <div class="brand">
+        <span class="orb orb-sm" aria-hidden="true"><i class="orb-glow"></i><i class="orb-ring"></i><i class="orb-core"></i></span>
+        <span class="wordmark">Jarvis</span>
+      </div>
+
+      <div class="status-pill" id="status-pill" role="status" aria-live="polite">
+        <span class="pill-dot"></span>
+        <span class="pill-label" id="orb-status-label">Idle</span>
+      </div>
+      <span class="chip chip-mode" id="mode-chip" hidden>Job hunting mode</span>
+
+      <div class="topbar-spacer"></div>
+
+      <div class="switches">
+        <button id="voice-toggle" type="button" class="switch" role="switch" aria-checked="true"
+                title="Wake-word listening. Off releases the microphone entirely.">
+          <span class="switch-label">Voice</span>
+          <span class="switch-track" aria-hidden="true"><i></i></span>
+          <span class="sr-only" id="voice-toggle-state">--</span>
+        </button>
+        <button id="speak-toggle" type="button" class="switch" role="switch" aria-checked="true"
+                title="Read replies aloud for messages you type.">
+          <span class="switch-label">Speak replies</span>
+          <span class="switch-track" aria-hidden="true"><i></i></span>
+          <span class="sr-only" id="speak-toggle-state">--</span>
+        </button>
+      </div>
+
+      <div class="clock" aria-label="Date and time">
+        <span class="clock-time" id="time-value">--:--:--</span>
+        <span class="clock-date" id="date-value">----.--.--</span>
+      </div>
+    </header>
+
+    <!-- ───────── Conversation stage ───────── -->
+    <main class="stage">
+      <div class="stage-tabs">
+        <div class="tabs" role="tablist">
+          <button id="tab-log-btn" class="tab active" type="button" role="tab">Conversation</button>
+          <button id="tab-jobresults-btn" class="tab" type="button" role="tab">Job results<span class="tab-count" id="jobresults-count" hidden>0</span></button>
+        </div>
+        <button id="reset-btn" class="btn-ghost" type="button">New chat</button>
+      </div>
+
+      <div class="log-list" id="log-list">
+        <div class="empty-hero" id="log-empty">
+          <span class="orb orb-xl" aria-hidden="true"><i class="orb-glow"></i><i class="orb-ring"></i><i class="orb-core"></i></span>
+          <h1 class="hero-title" id="hero-title">How can I help?</h1>
+          <p class="hero-sub">Just start typing. Press <kbd>Ctrl</kbd> <kbd>Space</kbd> from any app to jump here.</p>
+          <div class="suggestions" id="suggestions">
+            <button type="button" class="suggestion" data-prompt="When's the next departure from my usual stop?">Next departures</button>
+            <button type="button" class="suggestion" data-prompt="Find jobs for me">Find jobs for me</button>
+            <button type="button" class="suggestion" data-prompt="What's the weather like in Oslo today?">Weather in Oslo</button>
+            <button type="button" class="suggestion" data-prompt="What have I applied to?">My applications</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="jobresults-list" id="jobresults-list" hidden>
+        <div class="jobresults-empty" id="jobresults-empty">No search results yet. Ask Jarvis to find jobs.</div>
+      </div>
+
+      <div class="composer-wrap">
+        <div class="composer-meta">
+          <span class="followup-badge" id="followup-badge">Listening for a follow-up&hellip;</span>
+          <button id="cancel-btn" class="btn-stop" type="button" hidden>
+            <svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></svg>
+            Stop <kbd>Esc</kbd>
+          </button>
+        </div>
+        <form id="message-form" class="composer">
+          <svg class="composer-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3zM19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9L19 15z" fill="currentColor"/></svg>
+          <input id="text-input" type="text" autofocus autocomplete="off" spellcheck="false"
+                 placeholder="Ask Jarvis anything" aria-label="Message" />
+          <kbd class="composer-hint" title="Global shortcut: focuses this box from any app">Ctrl Space</kbd>
+          <button id="talk-btn" type="button" class="icon-btn" title="Talk to Jarvis (push to talk)" aria-label="Talk to Jarvis">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z" fill="currentColor"/></svg>
+          </button>
+          <button id="send-btn" type="submit" class="send-btn" title="Send" aria-label="Send">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 19V5m0 0l-6 6m6-6l6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </form>
+      </div>
+    </main>
+
+    <!-- ───────── Sidebar cards ───────── -->
+    <aside class="sidebar">
+      <section class="card card-nowplaying">
+        <div class="card-head"><h2>Now playing</h2>
+          <button id="spotify-connect-btn" class="btn-spotify" type="button" hidden>Connect Spotify</button>
+        </div>
+        <div class="nowplaying-empty" id="nowplaying-empty">Nothing playing</div>
+        <div class="nowplaying-content" id="nowplaying-content" hidden>
+          <div class="nowplaying-track-row">
+            <img id="nowplaying-art" class="nowplaying-art" alt="Album art" />
+            <div class="nowplaying-meta">
+              <div class="nowplaying-title" id="nowplaying-title">--</div>
+              <div class="nowplaying-artist" id="nowplaying-artist">--</div>
+            </div>
+          </div>
+          <div class="nowplaying-progress-row">
+            <span class="nowplaying-time" id="nowplaying-elapsed">0:00</span>
+            <div class="nowplaying-progress-track">
+              <div class="nowplaying-progress-fill" id="nowplaying-progress-fill"></div>
+            </div>
+            <span class="nowplaying-time" id="nowplaying-duration">0:00</span>
+          </div>
+          <div class="nowplaying-controls-row">
+            <button id="nowplaying-prev" class="ctl-btn" title="Previous" aria-label="Previous">
+              <svg viewBox="0 0 24 24" width="16" height="16"><path d="M6 6h2v12H6zM9.5 12L18 6v12z" fill="currentColor"/></svg>
+            </button>
+            <button id="nowplaying-playpause" class="ctl-btn ctl-primary" title="Play/Pause" aria-label="Play or pause"></button>
+            <button id="nowplaying-next" class="ctl-btn" title="Next" aria-label="Next">
+              <svg viewBox="0 0 24 24" width="16" height="16"><path d="M16 6h2v12h-2zM6 18V6l8.5 6z" fill="currentColor"/></svg>
+            </button>
+          </div>
+          <div class="nowplaying-volume-row">
+            <span class="nowplaying-volume-label">Vol</span>
+            <input type="range" id="nowplaying-volume" min="0" max="100" value="50" />
+            <span class="nowplaying-volume-value" id="nowplaying-volume-value">--</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="card card-transit">
+        <div class="card-head"><h2>Transit</h2><span class="card-meta" id="transit-stop"></span></div>
+        <div class="transit-list" id="transit-list">
+          <div class="transit-empty" id="transit-empty">Loading&hellip;</div>
+        </div>
+      </section>
+
+      <section class="card card-applications">
+        <div class="card-head"><h2>Job applications</h2></div>
+        <div class="applications-list" id="applications-list">
+          <div class="applications-empty" id="applications-empty">No applications logged</div>
+        </div>
+      </section>
+
+      <section class="card card-system">
+        <div class="card-head"><h2>System</h2></div>
+        <div class="kv-row"><span class="kv-key">Microphone</span><span class="kv-val"><span class="dot" id="mic-dot"></span><span id="mic-value">Ready</span></span></div>
+        <div class="kv-row"><span class="kv-key">State</span><span class="kv-val" id="state-value">Idle</span></div>
+        <div class="kv-row"><span class="kv-key">CPU</span><span class="kv-val" id="cpu-value">--%</span></div>
+        <div class="kv-row"><span class="kv-key">Memory</span><span class="kv-val" id="memory-value">Empty</span></div>
+        <div class="kv-row"><span class="kv-key">Spotify</span><span class="kv-val" id="spotify-value">--</span></div>
+        <div class="kv-row" id="health-row">
+          <span class="kv-key">Health</span>
+          <span class="kv-val">
+            <span id="health-value">--</span>
+            <button id="health-connect-btn" class="btn-mini" type="button" hidden
+                    title="Authorize Jarvis to read your sleep and activity from Google Health">Connect</button>
+          </span>
+        </div>
+        <div class="kv-row" id="mode-row" hidden><span class="kv-key">Mode</span><span class="kv-val" id="mode-value">Job hunting</span></div>
+      </section>
+    </aside>
+  </div>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

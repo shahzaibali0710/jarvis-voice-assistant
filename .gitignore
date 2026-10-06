@@ -1,0 +1,19 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Personal data and runtime state
+command.wav
+*.wav
+logs/
+applications.json
+transit_settings.json
+settings.json
+
+# Generated audio samples
+tts_samples/
+
+# Secrets
+.env
+*.key
