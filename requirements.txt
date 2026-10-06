@@ -1,0 +1,35 @@
+# Jarvis -- third-party packages the code imports.
+# Versions are the ones from the tested environment: Python 3.12 (x64) on Windows 11.
+# Install with:  pip install -r requirements.txt
+
+# Claude API (tool calling + server-side web search)
+anthropic==0.122.0
+
+# Speech to text (local) and text to speech
+faster-whisper==1.2.1
+edge-tts==7.2.8
+
+# Wake word ("Hey Jarvis") and microphone / audio playback
+openwakeword==0.6.0
+PyAudio==0.2.14
+pygame==2.6.1
+numpy==2.5.2
+
+# Voice activity detection. Prebuilt wheels: the plain "webrtcvad" package has to
+# be compiled and needs the Microsoft C++ Build Tools on Windows.
+webrtcvad-wheels==2.0.14
+
+# Web UI and service clients (Spotify, Google Health, Entur)
+Flask==3.1.3
+httpx==0.28.1
+
+# OAuth refresh tokens are stored in the Windows Credential Manager
+keyring==25.7.0
+
+# Optional: CPU readout in the UI (imported inside a try/except)
+psutil==7.2.2
+
+# Not imported directly, but needed at runtime: Windows ships no time zone
+# database, so zoneinfo cannot resolve Europe/Oslo without it (the Google Health
+# date windows depend on that).
+tzdata==2026.5

@@ -19,7 +19,9 @@ from datetime import datetime
 
 import httpx
 
-CLIENT_NAME = "shahzaib-jarvis"
+# Entur asks every client to identify itself as "company-application" so they can
+# contact you if it misbehaves. Replace with your own before heavy use.
+CLIENT_NAME = "personal-jarvis"
 HEADERS = {"ET-Client-Name": CLIENT_NAME, "User-Agent": CLIENT_NAME}
 
 GEOCODER_URL = "https://api.entur.io/geocoder/v1/autocomplete"

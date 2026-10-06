@@ -17,3 +17,6 @@ tts_samples/
 # Secrets
 .env
 *.key
+
+# Local job-search profile (personal details; copy candidate_profile.example.txt to create yours)
+candidate_profile.txt
